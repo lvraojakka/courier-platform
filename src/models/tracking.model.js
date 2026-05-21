@@ -1,23 +1,43 @@
 // src/models/tracking.model.js
 import mongoose from "mongoose";
 
-const trackingSchema = new mongoose.Schema({
+const trackingSchema = new mongoose.Schema(
+  {
+    orderId: {
+      type: String,
+      required: true,
+      index: true,
+    },
 
-  orderId: {
-    type: String,
+    awbNumber: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
+    courierPartner: {
+      type: String,
+      required: true,
+    },
+
+    status: {
+      type: String,
+      required: true,
+    },
+
+    rawPayload: {
+      type: Object,
+      default: {},
+    },
+
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
   },
-
-  status: {
-    type: String,
+  {
+    versionKey: false,
   },
-
-  rawPayload: Object,
-
-  timestamp: {
-    type: Date,
-    default: Date.now
-  }
-
-});
+);
 
 export default mongoose.model("Tracking", trackingSchema);

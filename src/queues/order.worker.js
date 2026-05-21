@@ -1,28 +1,79 @@
 // src/queues/order.worker.js
 import { Worker } from "bullmq";
-import connection from "../config/redis.js";
+import redisConnection from "../config/redis.js";
+import Batch from "../models/batch.model.js";
 import OrderService from "../services/order.service.js";
 import logger from "../utils/logger.js";
 
 const worker = new Worker(
-  "orders",
-  async (job) => {
-    logger.info(`Processing order: ${job.data.id}`);
+  "orderQueue",
 
-    await OrderService.createOrder(job.data);
+  async (job) => {
+    const { batchId, orderData } = job.data;
+
+    try {
+      const order = await OrderService.createOrder(orderData);
+
+      await Batch.updateOne(
+        { batchId },
+        {
+          $inc: {
+            processedOrders: 1,
+            successOrders: 1,
+          },
+          $push: {
+            results: {
+              orderId: order.orderId,
+              success: true,
+            },
+          },
+        },
+      );
+
+      logger.info(`Bulk order processed: ${order.orderId}`);
+    } catch (error) {
+      await Batch.updateOne(
+        { batchId },
+        {
+          $inc: {
+            processedOrders: 1,
+            failedOrders: 1,
+          },
+          $push: {
+            results: {
+              success: false,
+              error: error.message,
+            },
+          },
+        },
+      );
+
+      logger.error({
+        message: "Bulk order failed",
+        error: error.message,
+        stack: error.stack,
+      });
+    }
+
+    /*
+     * Mark Batch Completed
+     */
+    const batch = await Batch.findOne({ batchId });
+
+    if (batch.processedOrders === batch.totalOrders) {
+      batch.status = "COMPLETED";
+
+      await batch.save();
+
+      logger.info(`Batch completed: ${batchId}`);
+    }
   },
+
   {
-    connection,
-    concurrency: 10,
-  }
+    connection: redisConnection,
+
+    concurrency: 20,
+  },
 );
 
-worker.on("completed", (job) => {
-  logger.info(`Job completed: ${job.id}`);
-});
-
-worker.on("failed", (job, err) => {
-  logger.error(`Job failed: ${job?.id}`, err);
-});
-
-logger.info("Order worker started");
+export default worker;

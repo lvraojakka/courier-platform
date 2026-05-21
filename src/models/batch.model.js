@@ -2,43 +2,41 @@
 import mongoose from "mongoose";
 
 const batchSchema = new mongoose.Schema({
-
   batchId: {
     type: String,
     required: true,
     unique: true,
+    index: true,
   },
-
   totalOrders: {
     type: Number,
     required: true,
   },
-
-  successCount: {
+  processedOrders: {
     type: Number,
     default: 0,
   },
-
-  failedCount: {
+  successOrders: {
     type: Number,
     default: 0,
   },
-
+  failedOrders: {
+    type: Number,
+    default: 0,
+  },
   status: {
     type: String,
-    enum: [
-      "PROCESSING",
-      "COMPLETED",
-      "FAILED"
-    ],
-
-    default: "PROCESSING",
-  }
-
+    enum: ["PENDING", "PROCESSING", "COMPLETED"],
+    default: "PENDING",
+  },
+  results: [{
+    orderId: String,
+    success: Boolean,
+    error: String,
+  }],
 }, {
-  timestamps: true
+  timestamps: true,
+  versionKey: false,
 });
 
-const Batch = mongoose.model("Batch",batchSchema);
-
-export default Batch;
+export default mongoose.model("Batch", batchSchema);

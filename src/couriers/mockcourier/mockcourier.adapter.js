@@ -2,33 +2,39 @@
 import CourierInterface from "../interfaces/courier.interface.js";
 
 class MockCourierAdapter extends CourierInterface {
-
-  async authenticate() {
-    return true;
-  }
-
-  async createShipment() {
-
+  async createOrder(orderData) {
     return {
-      courierOrderId: "MOCK123",
-      awbNumber: "AWB123456",
-      status: "CREATED"
+      courier_order_id: `MOCK-${Date.now()}`,
+      awb: `AWB-${Date.now()}`,
+      status: "CREATED",
+      raw: orderData,
     };
   }
 
-  async trackShipment() {
-
+  async trackOrder(awb) {
     return {
-      status: "IN_TRANSIT"
+      awb,
+      current_status: "IN_TRANSIT",
+      tracking_history: [
+        {
+          status: "CREATED",
+          timestamp: new Date(),
+        },
+        {
+          status: "IN_TRANSIT",
+          timestamp: new Date(),
+        },
+      ],
     };
   }
 
-  async cancelShipment() {
-
+  async cancelOrder(awb) {
     return {
-      status: "CANCELLED"
+      success: true,
+      awb,
+      message: "Shipment cancelled",
     };
   }
 }
 
-export default MockCourierAdapter;
+export default new MockCourierAdapter();

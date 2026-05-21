@@ -1,19 +1,20 @@
 // src/middlewares/validate.middleware.js
-const validate = (schema) => {
+export const validate = (schema) => (req,res,next) => {
+  const { error } = schema.validate(req.body,{ abortEarly:false });
 
-  return (req, res, next) => {
-    
-    const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({
+      success:false,
+      error:{
+        code:"VALIDATION_ERROR",
+        message:"Invalid request payload",
+        details:error.details.map((err) => ({
+          field:err.path.join("."),
+          message:err.message,
+        })),
+      },
+    });
+  }
 
-    if (error) {
-
-      return res.status(400).json({
-        success: false,
-        error: error.details
-      });
-    }
-    next();
-  };
+  next();
 };
-
-export default validate;

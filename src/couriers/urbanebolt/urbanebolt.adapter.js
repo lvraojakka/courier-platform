@@ -1,23 +1,38 @@
+// src/couriers/urbanebolt/urbanebolt.adapter.js
 import CourierInterface from "../interfaces/courier.interface.js";
+import client from "./urbanebolt.client.js";
+import {
+  mapCreateOrderPayload,
+  mapCreateOrderResponse,
+  mapTrackingResponse,
+  mapCancelResponse,
+} from "./urbanebolt.mapper.js";
 
-import UrbaneBoltClient from "./urbanebolt.client.js";
+class UrbaneboltAdapter extends CourierInterface {
+  /*
+   * Create Shipment
+   */
+  async createOrder(orderData) {
+    const payload = mapCreateOrderPayload(orderData);
+    const response = await client.createShipment(payload);
+    return mapCreateOrderResponse(response);
+  }
 
-import UrbaneBoltMapper from "./urbanebolt.mapper.js";
+  /*
+   * Track Shipment
+   */
+  async trackOrder(awb) {
+    const response = await client.trackShipment(awb);
+    return mapTrackingResponse(response);
+  }
 
-class UrbaneBoltAdapter
-extends CourierInterface {
-
-  async createShipment(data) {
-
-    // INTERNAL → COURIER FORMAT
-    const payload = UrbaneBoltMapper.toCreateOrderPayload(data);
-
-    // API CALL
-    const response = await UrbaneBoltClient.createOrder(payload);
-
-    // COURIER → INTERNAL FORMAT
-    return UrbaneBoltMapper.toNormalizedResponse(response);
+  /*
+   * Cancel Shipment
+   */
+  async cancelOrder(awb) {
+    const response = await client.cancelShipment(awb);
+    return mapCancelResponse(response);
   }
 }
 
-export default UrbaneBoltAdapter;
+export default new UrbaneboltAdapter();

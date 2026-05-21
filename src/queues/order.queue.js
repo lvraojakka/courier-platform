@@ -1,10 +1,9 @@
 // src/queues/order.queue.js
 import { Queue } from "bullmq";
-import connection from "../config/redis.js";
+import redisConnection from "../config/redis.js";
 
-const orderQueue = new Queue(
-  "orders",
-  { connection }
-);
+const orderQueue = new Queue("orderQueue", {
+  connection: redisConnection,
+});
 
 export default orderQueue;

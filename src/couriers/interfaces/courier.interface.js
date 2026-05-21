@@ -1,21 +1,15 @@
 // src/couriers/interfaces/courier.interface.js
-
 class CourierInterface {
-
-  async authenticate() {
-    throw new Error("authenticate not implemented");
+  async createOrder(orderData) {
+    throw new Error("createOrder() not implemented");
   }
 
-  async createShipment(data) {
-    throw new Error("createShipment not implemented");
+  async trackOrder(awb) {
+    throw new Error("trackOrder() not implemented");
   }
 
-  async trackShipment(awb) {
-    throw new Error("trackShipment not implemented");
-  }
-
-  async cancelShipment(orderId) {
-    throw new Error("cancelShipment not implemented");
+  async cancelOrder(awb) {
+    throw new Error("cancelOrder() not implemented");
   }
 }
 
