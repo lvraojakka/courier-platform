@@ -17,7 +17,6 @@ const orderSchema = new mongoose.Schema(
 
     courierShipmentId: {
       type: String,
-      unique: true,
     },
     awbNumber: {
       type: String,

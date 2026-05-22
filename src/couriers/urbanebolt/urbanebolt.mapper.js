@@ -1,7 +1,7 @@
 // src/couriers/urbanebolt/urbanebolt.mapper.js
 export const mapCreateOrderPayload = (data) => {
   return [{
-    customerCode: process.env.URBANEBOLT_CUSTOMER_CODE || "DEFAULT_CODE",
+    customerCode: process.env.URBANEBOLT_CUSTOMER_CODE || "UEBCUS0008",
     orderNumber: data.orderId,
     declaredValue: data.declared_value || 0,
     itemDescription: data.item_description || "PRODUCT",
@@ -49,18 +49,18 @@ export const mapCreateOrderPayload = (data) => {
 
 export const mapCreateOrderResponse = (response) => {
   return {
-    courier_order_id: response.order_id || null,
-    awb: response.awb || null,
-    status: response.status || "CREATED",
+    courier_order_id: response.orderNumber || null,
+    awb: response.awbNumber || null,
+    status: response.successResponse?.length ? "CREATED" : "FAILED",
     raw: response,
   };
 };
 
 export const mapTrackingResponse = (response) => {
   return {
-    awb: response.awb,
-    current_status: response.current_status,
-    tracking_history: response.history || [],
+    awb: response.awbNumber || null,
+    current_status: response.currentStatusCodeDescription || null,
+    tracking_history: response.trackingHistory || [],
     raw: response,
   };
 };

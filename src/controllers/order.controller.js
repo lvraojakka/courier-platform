@@ -47,7 +47,7 @@ export const cancelOrder = async (req,res,next) => {
 export const bulkCreateOrders = async (req,res,next) => {
   try {
     logger.info(`Bulk create orders API called`);
-    const batch = await OrderService.bulkCreateOrders(req.body);
+    const batch = await OrderService.bulkCreateOrders(req.body.orders);
     logger.info(`Bulk batch created: ${batch.batchId}`);
     res.status(202).json({ success:true,data:batch });
   } catch (error) {

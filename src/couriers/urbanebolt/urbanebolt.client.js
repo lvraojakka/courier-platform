@@ -10,9 +10,14 @@ class UrbaneboltClient {
     });
 
     this.token = null;
+
+    // Bind methods
+    this.authenticate = this.authenticate.bind(this);
+    this.getHeaders = this.getHeaders.bind(this);
+    this.request = this.request.bind(this);
   }
 
- // Authenticate and get token
+  // Authenticate and get token
   async authenticate() {
     try {
       const response = await this.client.post(
@@ -22,8 +27,8 @@ class UrbaneboltClient {
           password: process.env.URBANEBOLT_PASSWORD,
         }
       );
-
-      this.token = response.data?.token;
+logger.info("Urbanebolt authentication ",response);
+      this.token = response.data?.access_token;
 
       logger.info("Urbanebolt token generated");
 
@@ -38,7 +43,19 @@ class UrbaneboltClient {
     }
   }
 
-  // Get Headers
+  // Get headers
+  async getHeaders() {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    return {
+      Authorization: `Bearer ${this.token}`,
+      "Content-Type": "application/json",
+    };
+  }
+
+  // Common request handler
   async request(config) {
     try {
       const headers = await this.getHeaders();
@@ -58,7 +75,9 @@ class UrbaneboltClient {
         logger.warn("Urbanebolt token expired. Re-authenticating");
 
         await this.authenticate();
+
         const headers = await this.getHeaders();
+
         const retryResponse = await this.client({
           ...config,
           headers: {

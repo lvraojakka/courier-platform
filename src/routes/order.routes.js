@@ -7,13 +7,13 @@ import {
   bulkCreateOrders,
 } from "../controllers/order.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
-import { createOrderSchema } from "../validators/order.validator.js";
+import { bulkOrderSchema, createOrderSchema } from "../validators/order.validator.js";
 
 const router = express.Router();
 
 router.post("/", validate(createOrderSchema), createOrder);
 router.get("/:orderId/track", trackOrder);
 router.post("/:orderId/cancel", cancelOrder);
-router.post("/bulk", validate(createOrderSchema), bulkCreateOrders);
+router.post("/bulk", validate(bulkOrderSchema), bulkCreateOrders);
 
 export default router;

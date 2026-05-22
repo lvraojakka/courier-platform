@@ -1,4 +1,4 @@
-// src/queues/order.worker.js
+// queues/order.worker.js
 import { Worker } from "bullmq";
 import redisConnection from "../config/redis.js";
 import Batch from "../models/batch.model.js";
@@ -14,66 +14,89 @@ const worker = new Worker(
     try {
       const order = await OrderService.createOrder(orderData);
 
-      await Batch.updateOne(
+      const batch = await Batch.findOneAndUpdate(
         { batchId },
         {
           $inc: {
             processedOrders: 1,
             successOrders: 1,
           },
+
           $push: {
             results: {
               orderId: order.orderId,
               success: true,
+              error: null,
             },
           },
         },
+        { new: true }
       );
 
-      logger.info(`Bulk order processed: ${order.orderId}`);
+      logger.info(
+        `Bulk order processed: ${order.orderId}`
+      );
+
+      // Mark Batch Completed
+      if (
+        batch.processedOrders >= batch.totalOrders
+      ) {
+        batch.status = "COMPLETED";
+
+        await batch.save();
+
+        logger.info(
+          `Batch completed: ${batchId}`
+        );
+      }
+
     } catch (error) {
-      await Batch.updateOne(
+
+      const batch = await Batch.findOneAndUpdate(
         { batchId },
         {
           $inc: {
             processedOrders: 1,
             failedOrders: 1,
           },
+
           $push: {
             results: {
+              orderId: orderData.orderId,
               success: false,
               error: error.message,
             },
           },
         },
+        { new: true }
       );
 
       logger.error({
         message: "Bulk order failed",
+        orderId: orderData.orderId,
         error: error.message,
         stack: error.stack,
       });
-    }
 
-    /*
-     * Mark Batch Completed
-     */
-    const batch = await Batch.findOne({ batchId });
+      // Mark Batch Completed
+      if (
+        batch.processedOrders >= batch.totalOrders
+      ) {
+        batch.status = "COMPLETED";
 
-    if (batch.processedOrders === batch.totalOrders) {
-      batch.status = "COMPLETED";
+        await batch.save();
 
-      await batch.save();
-
-      logger.info(`Batch completed: ${batchId}`);
+        logger.info(
+          `Batch completed: ${batchId}`
+        );
+      }
     }
   },
 
   {
     connection: redisConnection,
-
-    concurrency: 20,
-  },
+    concurrency: 10,
+  }
 );
 
 export default worker;
